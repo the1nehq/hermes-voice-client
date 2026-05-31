@@ -18,9 +18,26 @@ import subprocess
 import os
 from pathlib import Path
 
-import requests
-import sounddevice as sd
-import numpy as np
+
+def _alert(title, message):
+    """Show a macOS dialog. Uses osascript directly to avoid rumps dependency."""
+    subprocess.run(["osascript", "-e",
+        f'display dialog "{message}" with title "{title}"'
+        f' buttons {{"OK"}} default button "OK" with icon stop'],
+        timeout=5)
+
+
+# ── Lazy imports with visible error if anything is missing ──
+try:
+    import requests
+    import sounddevice as sd
+    import numpy as np
+except ImportError as e:
+    _alert("Hermes Voice — Missing Dependencies",
+           f"{e}\n\nThe app launcher should have installed these.\n"
+           "Re-open the app to retry, or run manually:\n"
+           "brew install portaudio ffmpeg pkg-config")
+    sys.exit(1)
 
 # — Config ——————————————————————————————————————————
 SERVER_URL = os.environ.get("HERMES_VOICE_SERVER", "http://100.114.1.6:9120")
