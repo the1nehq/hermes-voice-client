@@ -1,54 +1,68 @@
 # Hermes Voice Client
 
-Push-to-talk voice interface for [Hermes Agent](https://github.com/NousResearch/hermes-agent). Mac client captures mic on hotkey, sends to Hermes server for STT→LLM→TTS, plays response through speakers.
+Push-to-talk voice interface for [Hermes Agent](https://github.com/NousResearch/hermes-agent). Lives in your Mac menu bar — no Dock icon, no window clutter.
 
-## Architecture
+<img src="https://img.shields.io/badge/platform-macOS%2012%2B-blue" alt="macOS 12+">
+<img src="https://img.shields.io/badge/license-MIT-green" alt="MIT">
+
+## How It Works
 
 ```
-┌──────────────────┐        ┌───────────────────────┐
-│   Mac Client     │  WAV   │   Hermes Server        │
-│                  │───────▶│                       │
-│ Ctrl+Shift+Space │        │ :9120 Voice API        │
-│   → mic capture  │◀───────│  STT (Whisper)         │
-│   ← speaker out  │  MP3   │  LLM (Hermes CLI)      │
-│                  │        │  TTS (ElevenLabs)      │
-└──────────────────┘        └───────────────────────┘
+Ctrl+Shift+Space (hold)  →  🟢 Mic captures audio
+           ↓
+         Release  →  🟡 WAV sent to Hermes server (Tailscale)
+           ↓
+Server: STT (Whisper) → LLM (Hermes) → TTS (ElevenLabs)
+           ↓
+         🟢  Response plays through Mac speakers
 ```
 
-- **Mic active only while hotkey held** — does not block system audio or voice calls
-- Response latency ~7 seconds (STT + LLM + TTS)
-- German voice support via ElevenLabs
+Menu bar icon shows status at a glance:
+- 🔹 Idle (waiting for hotkey)
+- 🟢 Recording (mic active)
+- 🟡 Processing (Hermes thinking)
+- 🔴 Error (connection lost)
 
-## Setup (Mac)
+## Quick Install (Mac)
 
-### 1. Install dependencies
+### 1. Download
+Get `HermesVoice.app.zip` from [Releases](https://github.com/the1nehq/hermes-voice-client/releases).
+
+### 2. Install dependencies
 ```bash
 brew install portaudio ffmpeg
-pip3 install sounddevice pynput requests
-```
-
-### 2. Download client
-```bash
-curl -o hermes_voice_client.py https://raw.githubusercontent.com/the1nehq/hermes-voice-client/main/hermes_voice_client.py
+pip3 install rumps sounddevice pynput requests
 ```
 
 ### 3. Run
-```bash
-python3 hermes_voice_client.py
-```
+Unzip, drag to `/Applications`. First launch: **right-click → Open** (unsigned app).
 
-Set `SERVER_URL` in the script if your Hermes server is not at `100.114.1.6:9120`.
+The app appears in your menu bar. Press **Ctrl+Shift+Space** to talk.
 
 ## Server Setup
 
-The `server.py` runs on your Hermes server:
+`server.py` runs on your Hermes server:
 
 ```bash
 pip install openai-whisper fastapi uvicorn
 python3 server.py  # starts on :9120
 ```
 
-A systemd service file is recommended for production.
+Set `HERMES_VOICE_SERVER` env var if your server isn't at `100.114.1.6:9120`.
+
+## Architecture
+
+```
+┌────────────────────┐        ┌───────────────────────┐
+│   Mac Client       │  WAV   │   Hermes Server        │
+│                    │───────▶│                       │
+│ Menu bar app       │        │ :9120 Voice API        │
+│ Ctrl+Shift+Space   │◀───────│  STT (Whisper)         │
+│   → mic capture    │  MP3   │  LLM (Hermes CLI)      │
+│   ← speaker play   │        │  TTS (ElevenLabs)      │
+└────────────────────┘        └───────────────────────┘
+         Tailscale                        Docker
+```
 
 ## License
 
