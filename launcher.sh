@@ -12,7 +12,25 @@ fi
 
 # Check system deps
 if ! python3 -c "import sounddevice" 2>/dev/null; then
-    if ! pkg-config --exists portaudio-2.0 2>/dev/null; then
+    # sounddevice not in system Python — check if portaudio C library exists
+    PORTAUDIO_FOUND=false
+
+    # Method 1: pkg-config
+    if command -v pkg-config &>/dev/null && pkg-config --exists portaudio-2.0 2>/dev/null; then
+        PORTAUDIO_FOUND=true
+    fi
+
+    # Method 2: look for the dylib directly (brew on Apple Silicon or Intel)
+    if [ "$PORTAUDIO_FOUND" = false ]; then
+        for lib_dir in /opt/homebrew/lib /usr/local/lib; do
+            if [ -f "$lib_dir/libportaudio.dylib" ] || [ -f "$lib_dir/libportaudio.a" ]; then
+                PORTAUDIO_FOUND=true
+                break
+            fi
+        done
+    fi
+
+    if [ "$PORTAUDIO_FOUND" = false ]; then
         osascript -e 'display dialog "Missing portaudio.\n\nInstall with:\nbrew install portaudio ffmpeg" buttons {"OK"} default button "OK" with icon stop'
         exit 1
     fi

@@ -30,14 +30,19 @@ Get `HermesVoice.app.zip` from [Releases](https://github.com/the1nehq/hermes-voi
 
 ### 2. Install dependencies
 ```bash
-brew install portaudio ffmpeg
+brew install portaudio ffmpeg pkg-config
 pip3 install rumps sounddevice pynput requests
 ```
 
+> **Note:** `pip3 install rumps sounddevice pynput requests` is only needed for manual runs from source. The `.app` bundle auto-creates its own virtual environment.
+
 ### 3. Run
 Unzip, drag to `/Applications`. First launch: **right-click → Open** (unsigned app).
-
 The app appears in your menu bar. Press **Ctrl+Shift+Space** to talk.
+
+### Troubleshooting
+- **"Missing portaudio"** despite `brew install portaudio`? Run `brew reinstall portaudio` — the v1.4.1 launcher detects the library directly now, no longer relying solely on pkg-config.
+- **"Microphone not authorized"**: System Preferences → Privacy → Microphone → enable Terminal (or the terminal app you used to launch).
 
 ## Server Setup
 
